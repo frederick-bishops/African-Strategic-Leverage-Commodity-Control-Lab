@@ -24,7 +24,7 @@ Data sources (cited inline):
     - Cobalt Institute / Gécamines (DRC copper/cobalt)
     - World Nuclear Association (uranium)
 
-Author: Generated with Perplexity Computer
+Author: Frederick Bishops
 License: Research, policy analysis, and educational use
 """
 
@@ -43,7 +43,7 @@ import math
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
 st.set_page_config(
-    page_title="ASLC — African Strategic Leverage & Commodity Control Lab",
+    page_title="African Strategic Leverage & Commodity Control Lab",
     page_icon="⚖️",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -1733,7 +1733,7 @@ def source_note(text):
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
 with st.sidebar:
-    st.markdown("### ⚖️ ASLC v3")
+    st.markdown("### ⚖️ ASLC")
     st.markdown("**African Strategic Leverage & Commodity Control Lab**")
     st.caption("Geoeconomic Bargaining Simulator · 20 Countries · 11 Commodities")
     st.divider()
@@ -1765,7 +1765,7 @@ with st.sidebar:
     st.divider()
     st.markdown(
         '<div class="box-note"><b>⚠️ Scenario Tool</b><br>'
-        'Not a forecast. All outputs are scenario-based with explicit '
+        'All outputs are scenario-based with explicit '
         'assumptions. See <i>Assumptions</i> page.</div>',
         unsafe_allow_html=True)
     st.divider()
@@ -1787,8 +1787,7 @@ if page == "🏠 Overview":
         'A geoeconomic scenario tool modelling how much leverage African '
         'states hold in critical commodity supply chains — and what policy '
         'packages convert resource endowments into credible bargaining '
-        'power without self-harm. v3 expands to <b>20 countries</b> and '
-        '<b>11 commodities</b> including Gold, Coffee, Copper, and Uranium.</div>',
+        'power without self-harm. </div>',
         unsafe_allow_html=True)
 
     k1, k2, k3, k4 = st.columns(4)

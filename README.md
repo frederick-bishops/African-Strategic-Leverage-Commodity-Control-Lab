@@ -1,4 +1,4 @@
-# CCLL — Commodity Control & Leverage Lab
+# Commodity Control & Leverage Lab
 
 A geoeconomic bargaining simulator that models Africa's strategic leverage over critical commodities vis-à-vis the EU and China. Built as a single-file Streamlit application.
 

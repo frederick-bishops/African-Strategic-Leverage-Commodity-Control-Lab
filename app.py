@@ -44,7 +44,7 @@ import math
 
 st.set_page_config(
     page_title="African Strategic Leverage & Commodity Control Lab",
-    page_icon="⚖️",
+    page_icon="🪝",
     layout="wide",
     initial_sidebar_state="expanded",
 )

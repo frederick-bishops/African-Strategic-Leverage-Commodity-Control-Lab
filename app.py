@@ -1733,7 +1733,7 @@ def source_note(text):
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
 with st.sidebar:
-    st.markdown("### ⚖️ ASLC")
+    
     st.markdown("**African Strategic Leverage & Commodity Control Lab**")
     st.caption("Geoeconomic Bargaining Simulator · 20 Countries · 11 Commodities")
     st.divider()

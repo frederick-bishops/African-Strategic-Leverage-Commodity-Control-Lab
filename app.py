@@ -104,6 +104,7 @@ html, body, [class*="st-"] { font-family: 'Inter', -apple-system, sans-serif; }
 .box-info {
     background: #E8F5E9; border-radius: 8px; padding: 1rem;
     border-left: 4px solid #2E7D32; margin: .6rem 0; font-size: .93rem;
+    color: #13343B;
 }
 .box-warn {
     background: #FFF3E0; border-radius: 8px; padding: 1rem;
@@ -122,6 +123,7 @@ html, body, [class*="st-"] { font-family: 'Inter', -apple-system, sans-serif; }
 .rbadge-critical { background: #B71C1C; }
 .rbadge-high     { background: #E65100; }
 .rbadge-moderate { background: #F57F17; color: #13343B; }
+.rbadge-limited  { background: #E65100; }
 .rbadge-low      { background: #2E7D32; }
 .rbadge-minimal  { background: #1B5E20; }
 
@@ -130,6 +132,8 @@ html, body, [class*="st-"] { font-family: 'Inter', -apple-system, sans-serif; }
 
 /* sidebar tweak */
 section[data-testid="stSidebar"] { background-color: #F3F3EE; }
+section[data-testid="stSidebar"] .stCaption p,
+section[data-testid="stSidebar"] .stMarkdown p { color: #13343B !important; }
 
 /* footer */
 .footer {
@@ -365,7 +369,7 @@ COMMODITIES = {
     ),
 
     # ── BAUXITE / ALUMINA ─────────────────────────────────────────────────────
-    "Bauxite / Alumina": dict(
+    "Bauxite/Alumina": dict(
         cat="Critical Mineral",
         use="Aluminium production (primary), refractories, abrasives, chemicals",
         prod_mt=400_000_000, unit="metric tons",               # USGS MCS 2025
@@ -803,7 +807,7 @@ COMMODITIES = {
 
 # ── Policy definitions ─────────────────────────────────────────────────────────
 POLICIES = {
-    "Export Tax / Restriction": dict(
+    "Export Tax/Restriction": dict(
         id="export_tax",
         desc="Impose a tax or quota on raw commodity exports to capture more "
              "value domestically and incentivise local processing.",
@@ -1152,7 +1156,15 @@ def _risk_level(s):
 
 def _risk_badge_html(level):
     cls = level.lower()
+    valid = {"critical", "high", "moderate", "limited", "low", "minimal"}
+    if cls not in valid:
+        cls = "moderate"
     return f'<span class="rbadge rbadge-{cls}">{level}</span>'
+
+
+def _risk_emoji(level):
+    return {"Critical": "🔴", "High": "🟠", "Moderate": "🟡",
+            "Low": "🟢", "Minimal": "⚪"}.get(level, "⚪")
 
 
 def simulate_policy(cdata, leverage, policy_id, params):
@@ -1748,19 +1760,23 @@ with st.sidebar:
         "ℹ️ About",
     ], label_visibility="collapsed")
 
-    st.divider()
-    st.markdown("#### Commodity")
-    sel_comm = st.selectbox("Select", list(COMMODITIES.keys()),
-                            key="g_comm", label_visibility="collapsed")
-    avail_c = list(COMMODITIES[sel_comm].get("africa", {}).keys())
-    if avail_c:
-        sel_country = st.selectbox("Focus Country",
-                                   ["All Producers"] + avail_c,
-                                   key="g_cntry")
-        sel_country = None if sel_country == "All Producers" else sel_country
+    if page not in ("📋 Assumptions", "ℹ️ About"):
+        st.divider()
+        st.markdown("#### Commodity")
+        sel_comm = st.selectbox("Select", list(COMMODITIES.keys()),
+                                key="g_comm", label_visibility="collapsed")
+        avail_c = list(COMMODITIES[sel_comm].get("africa", {}).keys())
+        if avail_c:
+            sel_country = st.selectbox("Focus Country",
+                                       ["All Producers"] + avail_c,
+                                       key="g_cntry")
+            sel_country = None if sel_country == "All Producers" else sel_country
+        else:
+            sel_country = None
+            st.caption("No African producers in database.")
     else:
+        sel_comm = list(COMMODITIES.keys())[0]
         sel_country = None
-        st.caption("No African producers in database.")
 
     st.divider()
     st.markdown(
@@ -1913,7 +1929,7 @@ elif page == "🔍 Leverage Analysis":
             'Price in USD/troy oz. 1 metric ton = 32,150 troy oz.</div>',
             unsafe_allow_html=True)
 
-    m1, m2, m3, m4 = st.columns(4)
+    m1, m2, m3, m4 = st.columns([1.3, 1, 1.2, 1.2])
     with m1: metric_card("Composite Leverage", f"{lv['composite']}/100",
                          border_color=lclr)
     with m2: metric_card("Level", level, border_color=lclr)
@@ -2069,11 +2085,11 @@ elif page == "🎯 Policy Simulator":
         with sc2:
             res = simulate_policy(cdata, lv, pol["id"], params)
             rm1, rm2, rm3 = st.columns(3)
-            with rm1: st.metric("Before", f"{res['orig_comp']}/100")
-            with rm2: st.metric("After",  f"{res['new_comp']}/100",
-                                delta=f"{res['delta']:+.1f}")
+            with rm1: metric_card("Before", f"{res['orig_comp']}/100")
+            with rm2: metric_card("After", f"{res['new_comp']}/100",
+                                  delta=res["delta"])
             avg_r = np.mean([v[0] for v in res["second"].values()])
-            with rm3: st.metric("Avg Risk", f"{avg_r:.0f}/100")
+            with rm3: metric_card("Avg Risk", f"{avg_r:.0f}/100")
 
             st.plotly_chart(
                 fig_policy_radar(res["orig_dims"], res["mod_dims"], sel_pol),
@@ -2088,8 +2104,7 @@ elif page == "🎯 Policy Simulator":
             st.plotly_chart(fig_risk_bars(res["second"]),
                             use_container_width=True)
             for rn, (rs, rl) in res["second"].items():
-                with st.expander(f"{_risk_badge_html(rl)} {rn}: {rs}/100",
-                                  unsafe_allow_html=True):
+                with st.expander(f"{_risk_emoji(rl)} {rn}: {rs}/100"):
                     st.markdown(f"Risk level: **{rl}** ({rs}/100)")
 
             st.divider()
@@ -2210,7 +2225,10 @@ elif page == "🌍 Country Explorer":
     st.caption("Explore each country's commodity portfolio, leverage position, "
                "and infrastructure context.")
 
-    sel_c = st.selectbox("Select Country", list(COUNTRIES.keys()), key="exp_cntry")
+    _countries_list = list(COUNTRIES.keys())
+    _sidebar_c = st.session_state.get("g_cntry", "All Producers")
+    _def_idx = _countries_list.index(_sidebar_c) if _sidebar_c in _countries_list else 0
+    sel_c = st.selectbox("Select Country", _countries_list, index=_def_idx, key="exp_cntry")
     cinfo = COUNTRIES[sel_c]
 
     # Country summary cards

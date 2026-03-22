@@ -49,42 +49,24 @@ st.set_page_config(
 )
 
 # ── Semantic theme tokens ─────────────────────────────────────────────────────
-THEMES = {
-    "dark": {
-        "app_bg": "#0D1518",
-        "panel_bg": "#142126",
-        "sidebar_bg": "#111D22",
-        "border": "#27414A",
-        "text_primary": "#E4ECEF",
-        "text_secondary": "#BACAD0",
-        "text_muted": "#8FA6AE",
-        "accent": "#4FA6B3",
-        "positive": "#57A870",
-        "negative": "#C66666",
-        "warning": "#C99654",
-        "chart_bg": "#142126",
-        "gridline": "#2A4048",
-        "legend_text": "#C9D5DA",
-        "rust": "#8E624A",
-    },
-    "light": {
-        "app_bg": "#F3F6F7",
-        "panel_bg": "#FFFFFF",
-        "sidebar_bg": "#E7EEF1",
-        "border": "#CFDCE1",
-        "text_primary": "#14252B",
-        "text_secondary": "#2C454F",
-        "text_muted": "#5E747C",
-        "accent": "#2E7380",
-        "positive": "#2D7A48",
-        "negative": "#A14343",
-        "warning": "#9A6A2F",
-        "chart_bg": "#FFFFFF",
-        "gridline": "#DFE6E9",
-        "legend_text": "#2C454F",
-        "rust": "#8F5A42",
-    },
+DARK_TOKENS = {
+    "app_bg": "#0D1518",
+    "panel_bg": "#142126",
+    "sidebar_bg": "#111D22",
+    "border": "#27414A",
+    "text_primary": "#E4ECEF",
+    "text_secondary": "#BACAD0",
+    "text_muted": "#8FA6AE",
+    "accent": "#4FA6B3",
+    "positive": "#57A870",
+    "negative": "#C66666",
+    "warning": "#C99654",
+    "chart_bg": "#142126",
+    "gridline": "#2A4048",
+    "legend_text": "#C9D5DA",
+    "rust": "#8E624A",
 }
+THEMES = {"dark": DARK_TOKENS}
 
 def _inject_theme_css(tokens):
     st.markdown(f"""
@@ -180,13 +162,8 @@ section[data-testid="stSidebar"] label, section[data-testid="stSidebar"] .stCapt
 """, unsafe_allow_html=True)
 
 
-def get_theme(mode):
-    if mode == "Light":
-        return THEMES["light"]
-    if mode == "Dark":
-        return THEMES["dark"]
-    hour = datetime.utcnow().hour
-    return THEMES["dark"] if hour >= 18 or hour < 7 else THEMES["light"]
+def get_theme():
+    return DARK_TOKENS
 
 
 DEFAULT_PLOTLY_MARGIN = dict(l=75, r=55, t=70, b=70)
@@ -215,8 +192,8 @@ def apply_theme(tokens):
     C = {
         "teal": tokens["accent"],
         "rust": tokens["rust"],
-        "dark_teal": "#466E78" if tokens == THEMES["dark"] else "#3A6973",
-        "cyan_light": "#90B6BF" if tokens == THEMES["dark"] else "#A8C6CD",
+        "dark_teal": "#466E78",
+        "cyan_light": "#90B6BF",
         "mauve": "#8F6A78",
         "gold": "#B08F63",
         "olive": "#6D7F67",
@@ -1846,14 +1823,28 @@ def analyst_callout(title, text, tone="info"):
 # ║                       SECTION 8 — SIDEBAR & NAV                            ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
-with st.sidebar:
-    theme_mode = st.selectbox("Theme", ["Dark", "Light", "Auto"], index=0, key="theme_mode")
-    TOK = get_theme(theme_mode)
-    apply_theme(TOK)
-    _inject_theme_css(TOK)
+TOK = get_theme()
+apply_theme(TOK)
+_inject_theme_css(TOK)
 
-    st.caption("Analytical navigation")
-    st.divider()
+# Force dark presentation even if Streamlit/browser prefers light
+st.markdown("""<style>
+section[data-testid="stSidebar"] > div {{ padding-top: 1rem; padding-bottom: 0.5rem; }}
+section[data-testid="stSidebar"] hr {{ margin: 0.25rem 0; }}
+section[data-testid="stSidebar"] .stRadio > div {{ gap: 0.15rem; }}
+section[data-testid="stSidebar"] .stSelectbox {{ margin-bottom: 0.1rem; }}
+/* Override any Streamlit light-mode leakage */
+[data-testid="stAppViewContainer"], [data-testid="stHeader"],
+[data-testid="stToolbar"], .stApp {{ background: {TOK["app_bg"]} !important; color: {TOK["text_primary"]} !important; }}
+</style>""", unsafe_allow_html=True)
+
+with st.sidebar:
+    st.markdown(
+        '<div style="font-size:.75rem;color:var(--text-muted);letter-spacing:.06em;'
+        'text-transform:uppercase;font-weight:600;margin-bottom:.15rem;">'
+        'Analytical Navigation</div>',
+        unsafe_allow_html=True,
+    )
 
     page = st.radio("Navigate", [
         "Overview",
@@ -1866,7 +1857,6 @@ with st.sidebar:
     ], label_visibility="collapsed")
 
     if page not in ("Assumptions", "About"):
-        st.divider()
         sel_comm = st.selectbox("Commodity Focus", list(COMMODITIES.keys()),
                                 key="g_comm")
         avail_c = list(COMMODITIES[sel_comm].get("africa", {}).keys())
@@ -1882,17 +1872,9 @@ with st.sidebar:
         sel_comm = list(COMMODITIES.keys())[0]
         sel_country = None
 
-    st.divider()
-    analyst_callout(
-        "Scenario tool notice",
-        "All outputs are scenario-based with explicit assumptions. "
-        "Use the Assumptions page for confidence qualifiers and model boundaries.",
-        "note",
-    )
-    st.divider()
-    st.markdown('<div class="meta-line">Data window: 2023–2025 public releases</div>', unsafe_allow_html=True)
+    st.markdown('<div class="meta-line" style="margin-top:.4rem;">Data window: 2023–2025 public releases</div>', unsafe_allow_html=True)
     st.markdown('<div class="meta-line">Sources: USGS · UN Comtrade · IMF · EU CRMA · ICO · WNA</div>', unsafe_allow_html=True)
-    st.markdown('<div style="height:1rem"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="height:.6rem"></div>', unsafe_allow_html=True)
     st.markdown('<div class="insignia">Designing Decision Systems</div>', unsafe_allow_html=True)
 
 

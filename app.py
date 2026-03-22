@@ -1842,7 +1842,7 @@ with st.sidebar:
     st.markdown(
         '<div style="font-size:.75rem;color:var(--text-muted);letter-spacing:.06em;'
         'text-transform:uppercase;font-weight:600;margin-bottom:.15rem;">'
-        'Analytical Navigation</div>',
+        'Navigation</div>',
         unsafe_allow_html=True,
     )
 

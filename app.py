@@ -44,75 +44,116 @@ import math
 
 st.set_page_config(
     page_title="African Strategic Leverage & Commodity Control Lab",
-    page_icon="🪝",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# ── Brand palette ─────────────────────────────────────────────────────────────
-C = {
-    "teal":       "#20808D",  # primary accent
-    "rust":       "#A84B2F",  # secondary / China highlight
-    "dark_teal":  "#1B474D",
-    "cyan_light": "#BCE2E7",
-    "mauve":      "#944454",
-    "gold":       "#FFC553",
-    "olive":      "#848456",
-    "brown":      "#6E522B",
-    "bg":         "#FCFAF6",  # off-white background
-    "card":       "#F3F3EE",  # card / sidebar background
-    "text":       "#13343B",  # body text
-    "muted":      "#2E565D",  # secondary text
-    "offblack":   "#091717",
+# ── Semantic theme tokens ─────────────────────────────────────────────────────
+THEMES = {
+    "dark": {
+        "app_bg": "#0D1518",
+        "panel_bg": "#142126",
+        "sidebar_bg": "#111D22",
+        "border": "#27414A",
+        "text_primary": "#E4ECEF",
+        "text_secondary": "#BACAD0",
+        "text_muted": "#8FA6AE",
+        "accent": "#4FA6B3",
+        "positive": "#57A870",
+        "negative": "#C66666",
+        "warning": "#C99654",
+        "chart_bg": "#142126",
+        "gridline": "#2A4048",
+        "legend_text": "#C9D5DA",
+        "rust": "#8E624A",
+    },
+    "light": {
+        "app_bg": "#F3F6F7",
+        "panel_bg": "#FFFFFF",
+        "sidebar_bg": "#E7EEF1",
+        "border": "#CFDCE1",
+        "text_primary": "#14252B",
+        "text_secondary": "#2C454F",
+        "text_muted": "#5E747C",
+        "accent": "#2E7380",
+        "positive": "#2D7A48",
+        "negative": "#A14343",
+        "warning": "#9A6A2F",
+        "chart_bg": "#FFFFFF",
+        "gridline": "#DFE6E9",
+        "legend_text": "#2C454F",
+        "rust": "#8F5A42",
+    },
 }
 
-CHART_SEQ = [C["teal"], C["rust"], C["dark_teal"], C["cyan_light"],
-             C["mauve"], C["gold"], C["olive"], C["brown"]]
-
-RISK_CLR = {"Critical": "#B71C1C", "High": "#E65100",
-            "Moderate": "#F57F17", "Low": "#2E7D32", "Minimal": "#1B5E20"}
-
-PLOTLY_LAYOUT = dict(
-    font=dict(family="Inter, -apple-system, sans-serif", color=C["text"]),
-    paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="rgba(0,0,0,0)",
-    margin=dict(l=40, r=40, t=50, b=40),
-)
-
-# ── Inject custom CSS ─────────────────────────────────────────────────────────
-st.markdown("""
+def _inject_theme_css(tokens):
+    st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 html, body, [class*="st-"] { font-family: 'Inter', -apple-system, sans-serif; }
+:root {{
+    --app-bg: {tokens["app_bg"]};
+    --panel-bg: {tokens["panel_bg"]};
+    --sidebar-bg: {tokens["sidebar_bg"]};
+    --border: {tokens["border"]};
+    --text-primary: {tokens["text_primary"]};
+    --text-secondary: {tokens["text_secondary"]};
+    --text-muted: {tokens["text_muted"]};
+    --accent: {tokens["accent"]};
+    --positive: {tokens["positive"]};
+    --negative: {tokens["negative"]};
+    --warning: {tokens["warning"]};
+    --legend-text: {tokens["legend_text"]};
+}}
+body, .stApp {{ background: var(--app-bg); color: var(--text-primary); }}
 
 /* ── metric cards ── */
 .m-card {
-    background: #F3F3EE; border-radius: 10px; padding: 1.1rem 1.2rem;
-    border-left: 4px solid #20808D; margin-bottom: .7rem;
+    background: var(--panel-bg); border-radius: 10px; padding: 1rem 1.05rem;
+    border: 1px solid var(--border); border-left: 3px solid var(--accent); margin-bottom: .65rem;
+    min-height: 110px;
 }
 .m-card .val {
-    font-size: 1.85rem; font-weight: 700; color: #13343B; line-height: 1.15;
+    font-size: clamp(1.2rem, 1.5vw, 1.55rem); font-weight: 650; color: var(--text-primary); line-height: 1.2;
+    white-space: normal; overflow-wrap: anywhere;
 }
 .m-card .lbl {
-    font-size: .78rem; color: #2E565D; text-transform: uppercase;
-    letter-spacing: .06em; font-weight: 600; margin-bottom: 2px;
+    font-size: .77rem; color: var(--text-muted); text-transform: uppercase;
+    letter-spacing: .05em; font-weight: 600; margin-bottom: .35rem; white-space: normal;
 }
-.m-card .delta-pos { color: #2E7D32; font-size: .95rem; margin-left: .4rem; }
-.m-card .delta-neg { color: #B71C1C; font-size: .95rem; margin-left: .4rem; }
+.m-card .delta-pos { color: var(--positive); font-size: .93rem; margin-left: .4rem; }
+.m-card .delta-neg { color: var(--negative); font-size: .93rem; margin-left: .4rem; }
 
-/* ── callout boxes ── */
-.box-info {
-    background: #E8F5E9; border-radius: 8px; padding: 1rem;
-    border-left: 4px solid #2E7D32; margin: .6rem 0; font-size: .93rem;
-    color: #13343B;
+/* ── analyst callouts ── */
+.box-note, .box-warn, .box-info {
+    background: color-mix(in srgb, var(--panel-bg) 92%, var(--accent) 8%);
+    border-radius: 8px; padding: .92rem 1rem; border: 1px solid var(--border); margin: .58rem 0;
+    font-size: .91rem; color: var(--text-secondary);
 }
-.box-warn {
-    background: #FFF3E0; border-radius: 8px; padding: 1rem;
-    border-left: 4px solid #E65100; margin: .6rem 0; font-size: .93rem;
+.box-info { border-left: 3px solid var(--accent); }
+.box-warn { border-left: 3px solid var(--warning); }
+.box-note { border-left: 3px solid var(--text-muted); }
+
+.page-title { font-size: 1.72rem; font-weight: 680; color: var(--text-primary); letter-spacing: -0.01em; margin-bottom: .2rem; }
+.page-subtitle { color: var(--text-secondary); margin-bottom: .95rem; font-size: .95rem; }
+.section-header { font-size: 1.1rem; font-weight: 620; color: var(--text-primary); margin-top: .8rem; margin-bottom: .35rem; }
+.insignia { color: var(--text-muted); font-size: .72rem; letter-spacing: .17em; text-transform: uppercase; opacity: .92; }
+.meta-line { color: var(--text-muted); font-size: .74rem; }
+
+/* tabs */
+button[data-baseweb="tab"] { color: var(--text-secondary) !important; }
+button[data-baseweb="tab"][aria-selected="true"] {
+    color: var(--text-primary) !important; border-bottom: 2px solid var(--accent) !important;
 }
-.box-note {
-    background: #F3F3EE; border-radius: 8px; padding: .85rem;
-    border-left: 4px solid #FFC553; margin: .6rem 0; font-size: .9rem;
+
+/* inputs + sidebar legibility */
+section[data-testid="stSidebar"] {
+    background-color: var(--sidebar-bg) !important;
+    border-right: 1px solid var(--border);
+}
+section[data-testid="stSidebar"] * { color: var(--text-primary) !important; }
+section[data-testid="stSidebar"] label, section[data-testid="stSidebar"] .stCaption p {
+    color: var(--text-secondary) !important;
 }
 
 /* ── risk badges ── */
@@ -120,28 +161,73 @@ html, body, [class*="st-"] { font-family: 'Inter', -apple-system, sans-serif; }
     display: inline-block; padding: .12rem .55rem; border-radius: 4px;
     font-size: .8rem; font-weight: 600; color: #fff;
 }
-.rbadge-critical { background: #B71C1C; }
-.rbadge-high     { background: #E65100; }
-.rbadge-moderate { background: #F57F17; color: #13343B; }
-.rbadge-limited  { background: #E65100; }
-.rbadge-low      { background: #2E7D32; }
-.rbadge-minimal  { background: #1B5E20; }
+.rbadge-critical { background: var(--negative); }
+.rbadge-high     { background: color-mix(in srgb, var(--warning) 85%, #8A4D00 15%); }
+.rbadge-moderate { background: var(--warning); color: #1b1f21; }
+.rbadge-limited  { background: var(--warning); }
+.rbadge-low      { background: var(--positive); }
+.rbadge-minimal  { background: color-mix(in srgb, var(--positive) 85%, #1e4f2f 15%); }
 
 /* ── source footnote ── */
-.src { font-size: .78rem; color: #2E565D; margin-top: .3rem; }
-
-/* sidebar tweak */
-section[data-testid="stSidebar"] { background-color: #F3F3EE; }
-section[data-testid="stSidebar"] .stCaption p,
-section[data-testid="stSidebar"] .stMarkdown p { color: #13343B !important; }
+.src { font-size: .78rem; color: var(--text-muted); margin-top: .3rem; }
 
 /* footer */
 .footer {
-    text-align: center; color: #2E565D; font-size: .78rem;
-    margin-top: 2.5rem; padding: 1rem 0; border-top: 1px solid #E5E3D4;
+    text-align: center; color: var(--text-muted); font-size: .78rem;
+    margin-top: 2.2rem; padding: 1rem 0; border-top: 1px solid var(--border);
 }
 </style>
 """, unsafe_allow_html=True)
+
+
+def get_theme(mode):
+    if mode == "Light":
+        return THEMES["light"]
+    if mode == "Dark":
+        return THEMES["dark"]
+    hour = datetime.utcnow().hour
+    return THEMES["dark"] if hour >= 18 or hour < 7 else THEMES["light"]
+
+
+def plotly_base(tokens, margin=None):
+    return dict(
+        font=dict(family="Inter, -apple-system, sans-serif",
+                  color=tokens["text_primary"], size=12),
+        paper_bgcolor=tokens["chart_bg"],
+        plot_bgcolor=tokens["chart_bg"],
+        margin=margin or dict(l=75, r=55, t=70, b=70),
+        legend=dict(font=dict(color=tokens["legend_text"], size=11)),
+    )
+
+
+def apply_theme(tokens):
+    global C, CHART_SEQ, RISK_CLR, PLOTLY_LAYOUT
+    C = {
+        "teal": tokens["accent"],
+        "rust": tokens["rust"],
+        "dark_teal": "#466E78" if tokens == THEMES["dark"] else "#3A6973",
+        "cyan_light": "#90B6BF" if tokens == THEMES["dark"] else "#A8C6CD",
+        "mauve": "#8F6A78",
+        "gold": "#B08F63",
+        "olive": "#6D7F67",
+        "brown": "#6C5A4A",
+        "bg": tokens["app_bg"],
+        "card": tokens["panel_bg"],
+        "text": tokens["text_primary"],
+        "muted": tokens["text_secondary"],
+        "offblack": "#091717",
+        "grid": tokens["gridline"],
+    }
+    CHART_SEQ = [C["teal"], C["rust"], C["dark_teal"], C["cyan_light"],
+                 C["mauve"], C["gold"], C["olive"], C["brown"]]
+    RISK_CLR = {
+        "Critical": tokens["negative"],
+        "High": tokens["warning"],
+        "Moderate": "#B68B55",
+        "Low": tokens["positive"],
+        "Minimal": "#3F8E5A",
+    }
+    PLOTLY_LAYOUT = plotly_base(tokens)
 
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
@@ -1162,11 +1248,6 @@ def _risk_badge_html(level):
     return f'<span class="rbadge rbadge-{cls}">{level}</span>'
 
 
-def _risk_emoji(level):
-    return {"Critical": "🔴", "High": "🟠", "Moderate": "🟡",
-            "Low": "🟢", "Minimal": "⚪"}.get(level, "⚪")
-
-
 def simulate_policy(cdata, leverage, policy_id, params):
     """Run policy simulation.  Returns dict with modified dims, first-order
     effects, second-order risks, composite change."""
@@ -1348,14 +1429,15 @@ def simulate_policy(cdata, leverage, policy_id, params):
 def _polar_layout(title, h=460):
     return dict(
         **PLOTLY_LAYOUT,
-        title=dict(text=title, font=dict(size=15)),
+        title=dict(text=title, font=dict(size=15, color=C["text"])),
+        margin=dict(l=120, r=110, t=80, b=80),
         polar=dict(
             radialaxis=dict(visible=True, range=[0, 100],
-                            tickfont=dict(size=9, color=C["muted"]),
-                            gridcolor="rgba(46,86,93,.12)"),
+                            tickfont=dict(size=10, color=C["muted"]),
+                            gridcolor=C["grid"]),
             angularaxis=dict(tickfont=dict(size=10, color=C["text"]),
-                             gridcolor="rgba(46,86,93,.12)"),
-            bgcolor="rgba(0,0,0,0)"),
+                             gridcolor=C["grid"]),
+            bgcolor=C["card"]),
         showlegend=False, height=h)
 
 
@@ -1386,9 +1468,9 @@ def fig_radar_compare(results):
             line=dict(color=clr, width=2),
             name=f"{nm} ({lv['composite']})",
             hovertemplate=f"{nm}<br>%{{theta}}: %{{r:.1f}}/100<extra></extra>"))
-    fig.update_layout(**_polar_layout("Comparative Leverage", h=500))
+    fig.update_layout(**_polar_layout("Comparative Leverage", h=620))
     fig.update_layout(showlegend=True,
-        legend=dict(orientation="h", y=-0.12, xanchor="center", x=0.5,
+        legend=dict(orientation="h", y=-0.2, xanchor="center", x=0.5,
                     font=dict(size=10)))
     return fig
 
@@ -1405,15 +1487,16 @@ def fig_buyers(cdata, name):
     fig = go.Figure(go.Bar(
         x=df["Share"], y=df["Buyer"], orientation="h",
         marker=dict(color=colors), text=[f"{v:.0f} %" for v in df["Share"]],
-        textposition="outside",
+        textposition=["outside" if v > 12 else "inside" for v in df["Share"]],
         hovertemplate="%{y}: %{x:.1f} %<extra></extra>"))
     fig.update_layout(**PLOTLY_LAYOUT,
         title=dict(text=f"Buyer Concentration: {name} (HHI {cdata.get('hhi',0):.2f})",
                    font=dict(size=13)),
         xaxis=dict(title="Import Share (%)",
                    range=[0, max(df["Share"])*1.3],
-                   gridcolor="rgba(46,86,93,.08)"),
-        yaxis=dict(title=""), height=340, showlegend=False)
+                   gridcolor=C["grid"]),
+        yaxis=dict(title="", automargin=True), margin=dict(l=180, r=70, t=70, b=45),
+        height=max(360, len(df)*36), showlegend=False)
     return fig
 
 
@@ -1435,11 +1518,11 @@ def fig_processing(commodities):
         title=dict(text="Processing Capacity Gap: Africa vs China vs EU",
                    font=dict(size=13)),
         barmode="group",
-        xaxis=dict(title="", tickangle=-30),
+        xaxis=dict(title="", tickangle=-30, automargin=True),
         yaxis=dict(title="Share of Global Processing (%)",
-                   gridcolor="rgba(46,86,93,.08)"),
+                   gridcolor=C["grid"]),
         legend=dict(orientation="h", y=1.05, xanchor="right", x=1),
-        height=450)
+        margin=dict(l=75, r=60, t=80, b=120), height=480)
     return fig
 
 
@@ -1448,15 +1531,15 @@ def fig_heatmap(results):
     z = [[results[c]["dims"][d] for d in LEVER_DIMS] for c in comms]
     fig = go.Figure(go.Heatmap(
         z=z, x=LEVER_DIMS, y=comms,
-        colorscale=[[0,"#B71C1C"],[.25,"#E65100"],
-                    [.5,"#F57F17"],[.75,"#2E7D32"],[1,"#1B5E20"]],
+        colorscale=[[0,RISK_CLR["Critical"]],[.35,RISK_CLR["High"]],
+                    [.55,RISK_CLR["Moderate"]],[.8,RISK_CLR["Low"]],[1,RISK_CLR["Minimal"]]],
         text=[[f"{v:.0f}" for v in row] for row in z],
         texttemplate="%{text}", hovertemplate=
         "Commodity: %{y}<br>Dimension: %{x}<br>Score: %{z:.1f}<extra></extra>",
         colorbar=dict(title="Score", ticksuffix="/100")))
     fig.update_layout(**PLOTLY_LAYOUT,
         title=dict(text="Leverage Heatmap", font=dict(size=13)),
-        xaxis=dict(title="", tickangle=-35), yaxis=dict(title=""),
+        xaxis=dict(title="", tickangle=-35, automargin=True), yaxis=dict(title="", automargin=True),
         height=max(400, len(comms) * 38))
     return fig
 
@@ -1479,16 +1562,16 @@ def fig_sankey(cdata, name):
     for i, (pn, pd) in enumerate(producers.items()):
         src.append(i); tgt.append(c_idx)
         vals.append(pd.get("share", 1))
-        link_clr.append("rgba(32,128,141,.35)")
+        link_clr.append("rgba(79,166,179,.35)")
     for j, (bn, bs) in enumerate(buyers.items()):
         src.append(c_idx); tgt.append(c_idx + 1 + j)
         vals.append(bs * 100)
         if bn == "China":
-            link_clr.append("rgba(168,75,47,.45)")
+            link_clr.append("rgba(143,90,66,.45)")
         elif "EU" in bn:
-            link_clr.append("rgba(27,71,77,.45)")
+            link_clr.append("rgba(70,110,120,.45)")
         else:
-            link_clr.append("rgba(188,226,231,.45)")
+            link_clr.append("rgba(120,149,157,.45)")
     ncol = []
     for n in nodes:
         if n in pnames:    ncol.append(C["teal"])
@@ -1518,11 +1601,10 @@ def fig_gap(gap_data):
         title=dict(text="Leverage Gap Analysis (by weighted impact)",
                    font=dict(size=13)),
         barmode="stack",
-        xaxis=dict(title="Score 0-100", range=[0, 115],
-                   gridcolor="rgba(46,86,93,.08)"),
-        yaxis=dict(title=""),
+        xaxis=dict(title="Score 0-100", range=[0, 115], gridcolor=C["grid"]),
+        yaxis=dict(title="", automargin=True),
         legend=dict(orientation="h", y=1.05, xanchor="right", x=1),
-        height=380)
+        margin=dict(l=210, r=60, t=75, b=60), height=420)
     return fig
 
 
@@ -1540,7 +1622,7 @@ def fig_policy_radar(orig, mod, title):
         line=dict(color=C["teal"], width=2.5), name="After"))
     fig.update_layout(**_polar_layout(f"Leverage Impact: {title}"))
     fig.update_layout(showlegend=True,
-        legend=dict(orientation="h", y=-0.1, xanchor="center", x=0.5,
+        legend=dict(orientation="h", y=-0.2, xanchor="center", x=0.5,
                     font=dict(size=10)))
     return fig
 
@@ -1553,13 +1635,14 @@ def fig_risk_bars(second):
     fig = go.Figure(go.Bar(
         x=scores, y=names, orientation="h",
         marker=dict(color=colors),
-        text=[str(s) for s in scores], textposition="outside",
+        text=[str(s) for s in scores], textposition=["outside" if s > 12 else "inside" for s in scores],
         hovertemplate="%{y}: %{x}/100<extra></extra>"))
     fig.update_layout(**PLOTLY_LAYOUT,
         title=dict(text="Second-Order Risk Assessment", font=dict(size=13)),
         xaxis=dict(title="Risk Score 0-100", range=[0, 110],
-                   gridcolor="rgba(46,86,93,.08)"),
-        yaxis=dict(title=""), height=370, showlegend=False)
+                   gridcolor=C["grid"]),
+        yaxis=dict(title="", automargin=True), margin=dict(l=220, r=60, t=75, b=60),
+        height=420, showlegend=False)
     return fig
 
 
@@ -1570,7 +1653,7 @@ def fig_scenario_compare(scenarios):
     risk  = [s["risk"] for s in scenarios]
     fig = make_subplots(rows=1, cols=2,
         subplot_titles=("Leverage Score Change", "Avg Risk Score"),
-        horizontal_spacing=.15)
+        horizontal_spacing=.16)
     fig.add_trace(go.Bar(x=names, y=orig, name="Before",
         marker=dict(color=C["muted"])), row=1, col=1)
     fig.add_trace(go.Bar(x=names, y=newc, name="After",
@@ -1583,12 +1666,12 @@ def fig_scenario_compare(scenarios):
         row=1, col=2)
     fig.update_layout(**PLOTLY_LAYOUT,
         title=dict(text="Scenario Comparison", font=dict(size=13)),
-        barmode="group", height=400,
+        barmode="group", height=460, margin=dict(l=70, r=40, t=90, b=110),
         legend=dict(orientation="h", y=-0.12, xanchor="center", x=.25))
     fig.update_yaxes(title_text="Composite Score",
-                     gridcolor="rgba(46,86,93,.08)", row=1, col=1)
+                     gridcolor=C["grid"], row=1, col=1)
     fig.update_yaxes(title_text="Risk 0-100",
-                     gridcolor="rgba(46,86,93,.08)", row=1, col=2)
+                     gridcolor=C["grid"], row=1, col=2)
     return fig
 
 
@@ -1606,17 +1689,17 @@ def fig_country_profile(country_name):
     fig = go.Figure(go.Bar(
         x=list(present.keys()),
         y=list(present.values()),
-        marker=dict(color=CHART_SEQ[:len(present)]),
+        marker=dict(color=[C["teal"] if i % 2 == 0 else C["dark_teal"] for i, _ in enumerate(present)]),
         text=[f"{v:.1f} %" for v in present.values()],
         textposition="outside",
         hovertemplate="%{x}: %{y:.1f} % of global production<extra></extra>"))
     fig.update_layout(**PLOTLY_LAYOUT,
         title=dict(text=f"{country_name} — Share of Global Production by Commodity",
                    font=dict(size=13)),
-        xaxis=dict(title="", tickangle=-30),
+        xaxis=dict(title="", tickangle=-30, automargin=True),
         yaxis=dict(title="Global Production Share (%)",
-                   gridcolor="rgba(46,86,93,.08)"),
-        height=380)
+                   gridcolor=C["grid"]),
+        margin=dict(l=70, r=40, t=75, b=95), height=400)
     return fig
 
 
@@ -1740,31 +1823,43 @@ def source_note(text):
     st.markdown(f'<p class="src">{text}</p>', unsafe_allow_html=True)
 
 
+def page_header(title, subtitle):
+    st.markdown(f'<div class="page-title">{title}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="page-subtitle">{subtitle}</div>', unsafe_allow_html=True)
+
+
+def analyst_callout(title, text, tone="info"):
+    cls = "box-info" if tone == "info" else "box-warn" if tone == "warn" else "box-note"
+    st.markdown(f'<div class="{cls}"><b>{title}</b><br>{text}</div>', unsafe_allow_html=True)
+
+
 # ╔══════════════════════════════════════════════════════════════════════════════╗
 # ║                       SECTION 8 — SIDEBAR & NAV                            ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
 with st.sidebar:
-    
-    st.markdown("**African Strategic Leverage & Commodity Control Lab**")
-    st.caption("Geoeconomic Bargaining Simulator · 20 Countries · 11 Commodities")
+    theme_mode = st.selectbox("Theme", ["Dark", "Light", "Auto"], index=0, key="theme_mode")
+    TOK = get_theme(theme_mode)
+    apply_theme(TOK)
+    _inject_theme_css(TOK)
+
+    st.caption("Analytical navigation")
     st.divider()
 
     page = st.radio("Navigate", [
-        "🏠 Overview",
-        "🔍 Leverage Analysis",
-        "🎯 Policy Simulator",
-        "📊 Comparative Dashboard",
-        "🌍 Country Explorer",
-        "📋 Assumptions",
-        "ℹ️ About",
+        "Overview",
+        "Leverage Analysis",
+        "Policy Simulator",
+        "Comparative Dashboard",
+        "Country Explorer",
+        "Assumptions",
+        "About",
     ], label_visibility="collapsed")
 
-    if page not in ("📋 Assumptions", "ℹ️ About"):
+    if page not in ("Assumptions", "About"):
         st.divider()
-        st.markdown("#### Commodity")
-        sel_comm = st.selectbox("Select", list(COMMODITIES.keys()),
-                                key="g_comm", label_visibility="collapsed")
+        sel_comm = st.selectbox("Commodity Focus", list(COMMODITIES.keys()),
+                                key="g_comm")
         avail_c = list(COMMODITIES[sel_comm].get("africa", {}).keys())
         if avail_c:
             sel_country = st.selectbox("Focus Country",
@@ -1779,32 +1874,33 @@ with st.sidebar:
         sel_country = None
 
     st.divider()
-    st.markdown(
-        '<div class="box-note"><b>⚠️ Scenario Tool</b><br>'
-        'All outputs are scenario-based with explicit '
-        'assumptions. See <i>Assumptions</i> page.</div>',
-        unsafe_allow_html=True)
+    analyst_callout(
+        "Scenario tool notice",
+        "All outputs are scenario-based with explicit assumptions. "
+        "Use the Assumptions page for confidence qualifiers and model boundaries.",
+        "note",
+    )
     st.divider()
-    st.caption("Data: USGS MCS 2025 · UN Comtrade · IMF · EU CRMA 2024 · ICO · WNA")
-    st.caption("Updated: March 2026")
+    st.markdown('<div class="meta-line">Data window: 2023–2025 public releases</div>', unsafe_allow_html=True)
+    st.markdown('<div class="meta-line">Sources: USGS · UN Comtrade · IMF · EU CRMA · ICO · WNA</div>', unsafe_allow_html=True)
+    st.markdown('<div style="height:1rem"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="insignia">Designing Decision Systems</div>', unsafe_allow_html=True)
 
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
 # ║                     SECTION 9 — PAGE: OVERVIEW                             ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
-if page == "🏠 Overview":
-    st.markdown(
-        '<div style="font-size:2rem;font-weight:700;color:#13343B;'
-        'letter-spacing:-.02em">African Strategic Leverage & Commodity Control Lab</div>',
-        unsafe_allow_html=True)
-    st.markdown(
-        '<div style="font-size:1rem;color:#2E565D;margin-bottom:1.2rem">'
-        'A geoeconomic scenario tool modelling how much leverage African '
-        'states hold in critical commodity supply chains — and what policy '
-        'packages convert resource endowments into credible bargaining '
-        'power without self-harm. </div>',
-        unsafe_allow_html=True)
+if page == "Overview":
+    page_header(
+        "African Strategic Leverage & Commodity Control Lab",
+        "Analytical instrument for assessing structural exposure, leverage drivers, and policy-relevant intervention logic across African commodity systems.",
+    )
+    analyst_callout(
+        "Analytical Summary",
+        "Highest leverage emerges where African production concentration intersects low substitutability and constrained buyer alternatives. Policy relevance depends on whether processing capacity can be captured without destabilizing trade channels.",
+        "note",
+    )
 
     k1, k2, k3, k4 = st.columns(4)
     with k1: st.metric("Commodities", len(COMMODITIES))
@@ -1814,7 +1910,7 @@ if page == "🏠 Overview":
     st.divider()
 
     # ── Commodity table ───────────────────────────────────────────────────────
-    st.markdown("### Commodity Overview")
+    st.markdown('<div class="section-header">Exposure Profile</div>', unsafe_allow_html=True)
     rows = []
     for nm, cd in COMMODITIES.items():
         rows.append({
@@ -1827,23 +1923,31 @@ if page == "🏠 Overview":
             "Africa Proc %": cd["proc"][1],
         })
     tdf = pd.DataFrame(rows)
-    st.dataframe(tdf, use_container_width=True, hide_index=True)
+    st.dataframe(
+        tdf,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "Category": st.column_config.TextColumn(width="medium"),
+            "Global Production": st.column_config.TextColumn(width="medium"),
+        },
+    )
     source_note("Sources: USGS MCS 2025 · UN Comtrade 2023 · ICCO 2024 · ICO 2024 · WNA 2024")
 
     st.divider()
-    st.markdown("### The Processing Gap")
+    st.markdown('<div class="section-header">Key Evidence</div>', unsafe_allow_html=True)
     st.caption("Africa produces critical raw materials but captures minimal "
                "processing value. China dominates midstream across nearly "
                "all commodities.")
     st.plotly_chart(fig_processing(COMMODITIES), use_container_width=True)
 
     st.divider()
-    st.markdown("### Leverage Landscape")
+    st.markdown('<div class="section-header">Scenario Comparison</div>', unsafe_allow_html=True)
     all_lev = {nm: compute_leverage(cd) for nm, cd in COMMODITIES.items()}
     st.plotly_chart(fig_heatmap(all_lev), use_container_width=True)
 
     st.divider()
-    st.markdown("### Country Coverage (20 Countries)")
+    st.markdown('<div class="section-header">Decision Support Context</div>', unsafe_allow_html=True)
     # Quick country table
     crows = []
     for cn, cd in COUNTRIES.items():
@@ -1855,7 +1959,7 @@ if page == "🏠 Overview":
             "GDP ($B)": cd["gdp_bn"],
             "Pop (M)": cd["population_mn"],
             "Rating": cd["rating"],
-            "EITI": "✅" if cd["eiti"] else "❌",
+            "EITI": "Yes" if cd["eiti"] else "No",
             "Key Commodities": ", ".join(comms_present) if comms_present else "—",
         })
     cdf = pd.DataFrame(crows)
@@ -1863,10 +1967,10 @@ if page == "🏠 Overview":
     source_note("Sources: World Bank 2023 · IMF REO SSA 2024 · Fitch / S&P ratings · EITI Secretariat")
 
     st.divider()
-    st.markdown("### Geopolitical Context: Africa – EU – China")
+    st.markdown('<div class="section-header">Policy Implications</div>', unsafe_allow_html=True)
     g1, g2, g3 = st.columns(3)
     with g1:
-        st.markdown("##### 🇨🇳 China")
+        st.markdown("##### China")
         st.markdown(
             "- Controls ~40-75 % of processing for most critical minerals\n"
             "- Largest buyer of African raw materials\n"
@@ -1876,7 +1980,7 @@ if page == "🏠 Overview":
             "- Dominates DRC/Zambia copper and cobalt\n")
         source_note("CFR 2026 · Africa Center for Strategic Studies")
     with g2:
-        st.markdown("##### 🇪🇺 European Union")
+        st.markdown("##### European Union")
         st.markdown(
             "- Critical Raw Materials Act (2024) anchors diversification\n"
             "- CBAM affects processed exports\n"
@@ -1886,7 +1990,7 @@ if page == "🏠 Overview":
             "- Lobito Corridor (EU Global Gateway)\n")
         source_note("SWP Berlin 2025 · EU CRMA 2024")
     with g3:
-        st.markdown("##### 🌍 African States")
+        st.markdown("##### African States")
         st.markdown(
             "- Hold ~30 % of global critical-mineral reserves (IMF)\n"
             "- Growing strategic confidence and industrial ambitions\n"
@@ -1901,31 +2005,32 @@ if page == "🏠 Overview":
 # ║                  SECTION 10 — PAGE: LEVERAGE ANALYSIS                      ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
-elif page == "🔍 Leverage Analysis":
+elif page == "Leverage Analysis":
     cdata = COMMODITIES[sel_comm]
     lv    = compute_leverage(cdata, sel_country)
     level, lclr, interp_text, rec_text = interpret_leverage(lv["composite"])
 
-    st.markdown(
-        f'<div style="font-size:1.8rem;font-weight:700;color:#13343B">'
-        f'Leverage Analysis: {sel_comm}</div>', unsafe_allow_html=True)
+    page_header(
+        f"Leverage Analysis: {sel_comm}",
+        "Briefing view of structural exposure, leverage decomposition, and decision rationale for the selected commodity.",
+    )
     if sel_country:
         st.caption(f"Country focus: {sel_country}")
 
     # Show unit note for non-standard commodities
     if cdata["unit"] == "60 kg bags":
         st.markdown(
-            '<div class="box-note">☕ <b>Coffee note:</b> Production expressed '
+            '<div class="box-note"><b>Coffee note:</b> Production expressed '
             'in 60 kg bags (ICO standard). 1 bag = 60 kg. Global production '
             '~175 million bags/year.</div>', unsafe_allow_html=True)
     elif cdata["unit"] == "metric tons U":
         st.markdown(
-            '<div class="box-note">☢️ <b>Uranium note:</b> Production in metric '
+            '<div class="box-note"><b>Uranium note:</b> Production in metric '
             'tons of uranium (tU). Price benchmark in USD/lb U3O8 (yellowcake). '
             '1 tU = ~2.597 lb U3O8.</div>', unsafe_allow_html=True)
     elif cdata["unit"] == "metric tons" and sel_comm == "Gold":
         st.markdown(
-            '<div class="box-note">🥇 <b>Gold note:</b> Production in metric tons. '
+            '<div class="box-note"><b>Gold note:</b> Production in metric tons. '
             'Price in USD/troy oz. 1 metric ton = 32,150 troy oz.</div>',
             unsafe_allow_html=True)
 
@@ -1940,15 +2045,15 @@ elif page == "🔍 Leverage Analysis":
         else:
             metric_card("Buyer HHI", f"{cdata['hhi']:.2f}")
 
-    box_cls = "box-info" if level in ("High", "Moderate") else "box-warn"
-    st.markdown(
-        f'<div class="{box_cls}"><b>{level} Leverage:</b> {interp_text}'
-        f'<br><br><b>Recommendation:</b> {rec_text}</div>',
-        unsafe_allow_html=True)
+    analyst_callout(
+        f"Decision Rationale — {level} leverage",
+        f"{interp_text}<br><br><b>Intervention logic:</b> {rec_text}",
+        "info" if level in ("High", "Moderate") else "warn",
+    )
     st.divider()
 
     tab_r, tab_t, tab_g, tab_p = st.tabs([
-        "🕸️ Radar", "📦 Trade Flows", "📊 Gap Analysis", "📄 Profile"])
+        "Exposure Profile", "Trade Flow Evidence", "Key Drivers", "Commodity Profile"])
 
     with tab_r:
         cr, cd_col = st.columns([3, 2])
@@ -1956,7 +2061,7 @@ elif page == "🔍 Leverage Analysis":
             st.plotly_chart(fig_radar(lv, sel_comm, sel_country),
                             use_container_width=True)
         with cd_col:
-            st.markdown("#### Breakdown")
+            st.markdown("#### Driver Summary")
             for d in LEVER_DIMS:
                 st.markdown(f"**{d}**: {lv['dims'][d]:.1f}/100")
                 st.progress(lv["dims"][d] / 100)
@@ -1977,14 +2082,18 @@ elif page == "🔍 Leverage Analysis":
             st.plotly_chart(bf, use_container_width=True)
 
     with tab_g:
-        st.markdown("#### Leverage Gap Analysis")
+        st.markdown("#### Key Drivers")
         st.caption("Ranked by potential gain × weight.")
         gaps = gap_analysis(cdata, sel_country)
         st.plotly_chart(fig_gap(gaps), use_container_width=True)
         st.dataframe(pd.DataFrame(gaps).rename(columns={
             "dim": "Dimension", "score": "Score", "gap": "Gap",
             "w_impact": "Weighted Impact", "feasibility": "Feasibility"}),
-            use_container_width=True, hide_index=True)
+            use_container_width=True, hide_index=True,
+            column_config={
+                "Dimension": st.column_config.TextColumn(width="large"),
+                "Feasibility": st.column_config.TextColumn(width="medium"),
+            })
 
     with tab_p:
         st.markdown(f"#### {sel_comm} — Full Profile")
@@ -2016,15 +2125,15 @@ elif page == "🔍 Leverage Analysis":
             st.caption(cdata["proc"][3])
             st.markdown("##### Regulatory Exposure")
             r = cdata["reg"]
-            st.markdown(f"- EU CRM Act Listed: {'✅' if r[0] else '❌'}")
-            st.markdown(f"- EU CBAM Relevant: {'✅' if r[1] else '❌'}")
-            st.markdown(f"- US Critical Mineral: {'✅' if r[2] else '❌'}")
-            st.markdown(f"- EU Due Diligence: {'✅' if r[3] else '❌'}")
+            st.markdown(f"- EU CRM Act Listed: {'Yes' if r[0] else 'No'}")
+            st.markdown(f"- EU CBAM Relevant: {'Yes' if r[1] else 'No'}")
+            st.markdown(f"- US Critical Mineral: {'Yes' if r[2] else 'No'}")
+            st.markdown(f"- EU Due Diligence: {'Yes' if r[3] else 'No'}")
             st.caption(r[4])
             st.markdown("##### Financing")
             st.markdown(f"Dependency: **{cdata['fin'][0]:.2f}**")
             st.markdown(f"Chinese Investment: "
-                        f"{'✅' if cdata['fin'][2] else '❌'}")
+                        f"{'Yes' if cdata['fin'][2] else 'No'}")
             st.markdown(f"Investors: {', '.join(cdata['fin'][1])}")
             st.markdown("##### Price Reference")
             bm, px_, vol = cdata["price"]
@@ -2037,12 +2146,12 @@ elif page == "🔍 Leverage Analysis":
     e1, e2 = st.columns(2)
     with e1:
         csv = make_leverage_csv(lv, sel_comm, sel_country)
-        st.download_button("📥 Leverage CSV", _csv_bytes(csv),
+        st.download_button("Export Leverage Data (CSV)", _csv_bytes(csv),
             f"aslc_leverage_{sel_comm.lower().replace(' ','_').replace('/','_')}.csv",
             "text/csv")
     with e2:
         rpt = make_report_txt(sel_comm, cdata, lv, country=sel_country)
-        st.download_button("📥 Full Report (TXT)", rpt.encode("utf-8"),
+        st.download_button("Download Briefing Report (TXT)", rpt.encode("utf-8"),
             f"aslc_report_{sel_comm.lower().replace(' ','_').replace('/','_')}.txt",
             "text/plain")
 
@@ -2051,19 +2160,18 @@ elif page == "🔍 Leverage Analysis":
 # ║                  SECTION 11 — PAGE: POLICY SIMULATOR                       ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
-elif page == "🎯 Policy Simulator":
+elif page == "Policy Simulator":
     cdata = COMMODITIES[sel_comm]
     lv    = compute_leverage(cdata, sel_country)
 
-    st.markdown(
-        '<div style="font-size:1.8rem;font-weight:700;color:#13343B">'
-        'Policy Move Simulator</div>', unsafe_allow_html=True)
-    st.caption("Model policy interventions and assess second-order risks.")
+    page_header(
+        "Policy Simulator",
+        "Compare intervention pathways, quantify second-order risk, and preserve decision traceability across scenarios.",
+    )
     st.markdown(f"**Commodity:** {sel_comm}" +
                 (f" | **Country:** {sel_country}" if sel_country else ""))
 
-    tab_single, tab_compare = st.tabs(["🔧 Single Policy",
-                                        "📊 Scenario Comparison"])
+    tab_single, tab_compare = st.tabs(["Single Policy", "Scenario Comparison"])
 
     with tab_single:
         sc1, sc2 = st.columns([1, 2])
@@ -2075,12 +2183,10 @@ elif page == "🎯 Policy Simulator":
             params = {}
             for pk, (lo, hi, df, lb) in pol["params"].items():
                 params[pk] = st.slider(lb, lo, hi, df, key=f"sp_{pk}")
-            with st.expander("📚 Precedents"):
+            with st.expander("Policy Precedents"):
                 for p in pol["precedents"]:
                     st.markdown(f"- {p}")
-            st.markdown(
-                f'<div class="box-warn"><b>WTO / Legal Risk:</b> '
-                f'{pol["wto"]}</div>', unsafe_allow_html=True)
+            analyst_callout("Legal exposure note", pol["wto"], "warn")
 
         with sc2:
             res = simulate_policy(cdata, lv, pol["id"], params)
@@ -2104,36 +2210,38 @@ elif page == "🎯 Policy Simulator":
             st.plotly_chart(fig_risk_bars(res["second"]),
                             use_container_width=True)
             for rn, (rs, rl) in res["second"].items():
-                with st.expander(f"{_risk_emoji(rl)} {rn}: {rs}/100"):
+                with st.expander(f"{rn}: {rs}/100"):
                     st.markdown(f"Risk level: **{rl}** ({rs}/100)")
 
             st.divider()
             pcsv = make_policy_csv(res, sel_comm, sel_pol)
-            st.download_button("📥 Policy CSV", _csv_bytes(pcsv),
+            st.download_button("Export Policy Scenario Data (CSV)", _csv_bytes(pcsv),
                 f"aslc_policy_{pol['id']}.csv", "text/csv",
                 key="dl_single_pol")
 
     with tab_compare:
-        st.markdown("#### Multi-Scenario Comparison")
+        st.markdown("#### Scenario Comparison")
         st.caption("Configure up to 4 scenarios side by side.")
         n_sc = st.number_input("Scenarios", 2, 4, 3, key="n_sc")
         scenarios = []
-        cols_sc = st.columns(int(n_sc))
-        for i, col in enumerate(cols_sc):
-            with col:
-                st.markdown(f"**Scenario {i+1}**")
-                sp = st.selectbox("Policy", list(POLICIES.keys()),
-                    key=f"sc_pol_{i}",
-                    index=min(i, len(POLICIES) - 1))
-                spol = POLICIES[sp]
-                sprm = {}
-                for pk, (lo, hi, df, lb) in spol["params"].items():
-                    sprm[pk] = st.slider(lb, lo, hi, df,
-                                         key=f"sc_{i}_{pk}")
-                sr = simulate_policy(cdata, lv, spol["id"], sprm)
-                ar = np.mean([v[0] for v in sr["second"].values()])
-                scenarios.append(dict(name=sp[:22], orig=sr["orig_comp"],
-                    new=sr["new_comp"], risk=ar))
+        config_panel = st.container()
+        with config_panel:
+            cols_sc = st.columns(int(n_sc))
+            for i, col in enumerate(cols_sc):
+                with col:
+                    st.markdown(f"**Scenario {i+1}**")
+                    sp = st.selectbox("Policy", list(POLICIES.keys()),
+                        key=f"sc_pol_{i}",
+                        index=min(i, len(POLICIES) - 1))
+                    spol = POLICIES[sp]
+                    sprm = {}
+                    for pk, (lo, hi, df, lb) in spol["params"].items():
+                        sprm[pk] = st.slider(lb, lo, hi, df,
+                                             key=f"sc_{i}_{pk}")
+                    sr = simulate_policy(cdata, lv, spol["id"], sprm)
+                    ar = np.mean([v[0] for v in sr["second"].values()])
+                    scenarios.append(dict(name=sp[:22], orig=sr["orig_comp"],
+                        new=sr["new_comp"], risk=ar))
         st.divider()
         if scenarios:
             st.plotly_chart(fig_scenario_compare(scenarios),
@@ -2148,17 +2256,22 @@ elif page == "🎯 Policy Simulator":
                     "Net": f"{(s['new']-s['orig']) - s['risk']*0.3:.1f}",
                 })
             st.dataframe(pd.DataFrame(comp_rows),
-                         use_container_width=True, hide_index=True)
+                         use_container_width=True, hide_index=True,
+                         column_config={
+                             "Scenario": st.column_config.TextColumn(width="medium"),
+                             "Avg Risk": st.column_config.TextColumn(width="small"),
+                         })
 
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
 # ║                SECTION 12 — PAGE: COMPARATIVE DASHBOARD                    ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
-elif page == "📊 Comparative Dashboard":
-    st.markdown(
-        '<div style="font-size:1.8rem;font-weight:700;color:#13343B">'
-        'Comparative Dashboard</div>', unsafe_allow_html=True)
+elif page == "Comparative Dashboard":
+    page_header(
+        "Comparative Dashboard",
+        "Cross-commodity comparison of leverage structure, exposure concentration, and scenario implication.",
+    )
 
     sel_comms = st.multiselect("Select Commodities",
         list(COMMODITIES.keys()),
@@ -2182,7 +2295,7 @@ elif page == "📊 Comparative Dashboard":
                 lvl = interpret_leverage(lv["composite"])[0]
                 st.markdown(
                     f"**{rank}. {nm}** — {lv['composite']}/100 "
-                    f"({_risk_badge_html(lvl)})",
+                    f"{_risk_badge_html(lvl)}",
                     unsafe_allow_html=True)
 
         st.divider()
@@ -2209,7 +2322,7 @@ elif page == "📊 Comparative Dashboard":
             row = {"Commodity": nm, "Composite": lv["composite"]}
             row.update(lv["dims"])
             export_rows.append(row)
-        st.download_button("📥 Comparison CSV",
+        st.download_button("Export Comparative Results (CSV)",
             _csv_bytes(pd.DataFrame(export_rows)),
             "aslc_comparison.csv", "text/csv")
 
@@ -2218,12 +2331,11 @@ elif page == "📊 Comparative Dashboard":
 # ║                 SECTION 13 — PAGE: COUNTRY EXPLORER (NEW)                  ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
-elif page == "🌍 Country Explorer":
-    st.markdown(
-        '<div style="font-size:1.8rem;font-weight:700;color:#13343B">'
-        'Country Explorer</div>', unsafe_allow_html=True)
-    st.caption("Explore each country's commodity portfolio, leverage position, "
-               "and infrastructure context.")
+elif page == "Country Explorer":
+    page_header(
+        "Country Explorer",
+        "Country-level structural exposure, production footprint, and leverage relevance across strategic commodities.",
+    )
 
     _countries_list = list(COUNTRIES.keys())
     _sidebar_c = st.session_state.get("g_cntry", "All Producers")
@@ -2293,8 +2405,15 @@ elif page == "🌍 Country Explorer":
                 "Composite Leverage": cinfo_c["composite_leverage"],
                 "Level": cinfo_c["leverage_level"],
             })
-        st.dataframe(pd.DataFrame(crows_t), use_container_width=True,
-                     hide_index=True)
+        st.dataframe(
+            pd.DataFrame(crows_t),
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "Level": st.column_config.TextColumn(width="medium"),
+                "Commodity": st.column_config.TextColumn(width="medium"),
+            },
+        )
 
         st.divider()
         st.markdown("### Per-Commodity Leverage Deep Dive")
@@ -2330,16 +2449,16 @@ elif page == "🌍 Country Explorer":
 # ║                 SECTION 14 — PAGE: ASSUMPTIONS                             ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
-elif page == "📋 Assumptions":
-    st.markdown(
-        '<div style="font-size:1.8rem;font-weight:700;color:#13343B">'
-        'Assumption Register</div>', unsafe_allow_html=True)
-    st.markdown(
-        '<div class="box-info"><b>Why this matters:</b> Presenting '
-        'scenarios as forecasts invites attack. This register makes every '
-        'assumption explicit and stress-testable, supporting the tool\'s '
-        'framing as a <em>resilience and bargaining realism</em> '
-        'platform.</div>', unsafe_allow_html=True)
+elif page == "Assumptions":
+    page_header(
+        "Assumption Register",
+        "Transparency layer documenting confidence qualifiers, data proxies, and structural modelling constraints.",
+    )
+    analyst_callout(
+        "Analytical annotation",
+        "Presenting scenarios as forecasts weakens interpretability. This register keeps each assumption explicit and stress-testable.",
+        "info",
+    )
 
     adf = pd.DataFrame(ASSUMPTIONS,
         columns=["ID", "Category", "Assumption", "Impact", "Source"])
@@ -2353,7 +2472,7 @@ elif page == "📋 Assumptions":
             st.markdown(f"**Impact:** {r['Impact']}")
             st.markdown(f"**Source:** {r['Source']}")
     st.divider()
-    st.download_button("📥 Assumptions CSV", _csv_bytes(adf),
+    st.download_button("Export Assumption Register (CSV)", _csv_bytes(adf),
                        "aslc_assumptions.csv", "text/csv")
 
     st.divider()
@@ -2393,10 +2512,11 @@ elif page == "📋 Assumptions":
 # ║                    SECTION 15 — PAGE: ABOUT                                ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
-elif page == "ℹ️ About":
-    st.markdown(
-        '<div style="font-size:1.8rem;font-weight:700;color:#13343B">'
-        'About & Methodology</div>', unsafe_allow_html=True)
+elif page == "About":
+    page_header(
+        "About & Methodology",
+        "Methodological framing, leverage construction logic, and known scope limitations for briefing use.",
+    )
     st.markdown("""
 ### What ASLC Does
 

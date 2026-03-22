@@ -90,7 +90,7 @@ def _inject_theme_css(tokens):
     st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-html, body, [class*="st-"] { font-family: 'Inter', -apple-system, sans-serif; }
+html, body, [class*="st-"] {{ font-family: 'Inter', -apple-system, sans-serif; }}
 :root {{
     --app-bg: {tokens["app_bg"]};
     --panel-bg: {tokens["panel_bg"]};
@@ -108,74 +108,74 @@ html, body, [class*="st-"] { font-family: 'Inter', -apple-system, sans-serif; }
 body, .stApp {{ background: var(--app-bg); color: var(--text-primary); }}
 
 /* ── metric cards ── */
-.m-card {
+.m-card {{
     background: var(--panel-bg); border-radius: 10px; padding: 1rem 1.05rem;
     border: 1px solid var(--border); border-left: 3px solid var(--accent); margin-bottom: .65rem;
     min-height: 110px;
-}
-.m-card .val {
+}}
+.m-card .val {{
     font-size: clamp(1.2rem, 1.5vw, 1.55rem); font-weight: 650; color: var(--text-primary); line-height: 1.2;
     white-space: normal; overflow-wrap: anywhere;
-}
-.m-card .lbl {
+}}
+.m-card .lbl {{
     font-size: .77rem; color: var(--text-muted); text-transform: uppercase;
     letter-spacing: .05em; font-weight: 600; margin-bottom: .35rem; white-space: normal;
-}
-.m-card .delta-pos { color: var(--positive); font-size: .93rem; margin-left: .4rem; }
-.m-card .delta-neg { color: var(--negative); font-size: .93rem; margin-left: .4rem; }
+}}
+.m-card .delta-pos {{ color: var(--positive); font-size: .93rem; margin-left: .4rem; }}
+.m-card .delta-neg {{ color: var(--negative); font-size: .93rem; margin-left: .4rem; }}
 
 /* ── analyst callouts ── */
-.box-note, .box-warn, .box-info {
+.box-note, .box-warn, .box-info {{
     background: color-mix(in srgb, var(--panel-bg) 92%, var(--accent) 8%);
     border-radius: 8px; padding: .92rem 1rem; border: 1px solid var(--border); margin: .58rem 0;
     font-size: .91rem; color: var(--text-secondary);
-}
-.box-info { border-left: 3px solid var(--accent); }
-.box-warn { border-left: 3px solid var(--warning); }
-.box-note { border-left: 3px solid var(--text-muted); }
+}}
+.box-info {{ border-left: 3px solid var(--accent); }}
+.box-warn {{ border-left: 3px solid var(--warning); }}
+.box-note {{ border-left: 3px solid var(--text-muted); }}
 
-.page-title { font-size: 1.72rem; font-weight: 680; color: var(--text-primary); letter-spacing: -0.01em; margin-bottom: .2rem; }
-.page-subtitle { color: var(--text-secondary); margin-bottom: .95rem; font-size: .95rem; }
-.section-header { font-size: 1.1rem; font-weight: 620; color: var(--text-primary); margin-top: .8rem; margin-bottom: .35rem; }
-.insignia { color: var(--text-muted); font-size: .72rem; letter-spacing: .17em; text-transform: uppercase; opacity: .92; }
-.meta-line { color: var(--text-muted); font-size: .74rem; }
+.page-title {{ font-size: 1.72rem; font-weight: 680; color: var(--text-primary); letter-spacing: -0.01em; margin-bottom: .2rem; }}
+.page-subtitle {{ color: var(--text-secondary); margin-bottom: .95rem; font-size: .95rem; }}
+.section-header {{ font-size: 1.1rem; font-weight: 620; color: var(--text-primary); margin-top: .8rem; margin-bottom: .35rem; }}
+.insignia {{ color: var(--text-muted); font-size: .72rem; letter-spacing: .17em; text-transform: uppercase; opacity: .92; }}
+.meta-line {{ color: var(--text-muted); font-size: .74rem; }}
 
 /* tabs */
-button[data-baseweb="tab"] { color: var(--text-secondary) !important; }
-button[data-baseweb="tab"][aria-selected="true"] {
+button[data-baseweb="tab"] {{ color: var(--text-secondary) !important; }}
+button[data-baseweb="tab"][aria-selected="true"] {{
     color: var(--text-primary) !important; border-bottom: 2px solid var(--accent) !important;
-}
+}}
 
 /* inputs + sidebar legibility */
-section[data-testid="stSidebar"] {
+section[data-testid="stSidebar"] {{
     background-color: var(--sidebar-bg) !important;
     border-right: 1px solid var(--border);
-}
-section[data-testid="stSidebar"] * { color: var(--text-primary) !important; }
-section[data-testid="stSidebar"] label, section[data-testid="stSidebar"] .stCaption p {
+}}
+section[data-testid="stSidebar"] * {{ color: var(--text-primary) !important; }}
+section[data-testid="stSidebar"] label, section[data-testid="stSidebar"] .stCaption p {{
     color: var(--text-secondary) !important;
-}
+}}
 
 /* ── risk badges ── */
-.rbadge {
+.rbadge {{
     display: inline-block; padding: .12rem .55rem; border-radius: 4px;
     font-size: .8rem; font-weight: 600; color: #fff;
-}
-.rbadge-critical { background: var(--negative); }
-.rbadge-high     { background: color-mix(in srgb, var(--warning) 85%, #8A4D00 15%); }
-.rbadge-moderate { background: var(--warning); color: #1b1f21; }
-.rbadge-limited  { background: var(--warning); }
-.rbadge-low      { background: var(--positive); }
-.rbadge-minimal  { background: color-mix(in srgb, var(--positive) 85%, #1e4f2f 15%); }
+}}
+.rbadge-critical {{ background: var(--negative); }}
+.rbadge-high     {{ background: color-mix(in srgb, var(--warning) 85%, #8A4D00 15%); }}
+.rbadge-moderate {{ background: var(--warning); color: #1b1f21; }}
+.rbadge-limited  {{ background: var(--warning); }}
+.rbadge-low      {{ background: var(--positive); }}
+.rbadge-minimal  {{ background: color-mix(in srgb, var(--positive) 85%, #1e4f2f 15%); }}
 
 /* ── source footnote ── */
-.src { font-size: .78rem; color: var(--text-muted); margin-top: .3rem; }
+.src {{ font-size: .78rem; color: var(--text-muted); margin-top: .3rem; }}
 
 /* footer */
-.footer {
+.footer {{
     text-align: center; color: var(--text-muted); font-size: .78rem;
     margin-top: 2.2rem; padding: 1rem 0; border-top: 1px solid var(--border);
-}
+}}
 </style>
 """, unsafe_allow_html=True)
 

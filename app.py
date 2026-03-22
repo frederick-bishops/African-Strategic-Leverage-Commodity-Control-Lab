@@ -189,15 +189,25 @@ def get_theme(mode):
     return THEMES["dark"] if hour >= 18 or hour < 7 else THEMES["light"]
 
 
-def plotly_base(tokens, margin=None):
+DEFAULT_PLOTLY_MARGIN = dict(l=75, r=55, t=70, b=70)
+
+
+def plotly_base(tokens):
     return dict(
         font=dict(family="Inter, -apple-system, sans-serif",
                   color=tokens["text_primary"], size=12),
         paper_bgcolor=tokens["chart_bg"],
         plot_bgcolor=tokens["chart_bg"],
-        margin=margin or dict(l=75, r=55, t=70, b=70),
         legend=dict(font=dict(color=tokens["legend_text"], size=11)),
     )
+
+
+def plotly_layout(*, margin=None, **overrides):
+    return {
+        **PLOTLY_LAYOUT,
+        "margin": margin or DEFAULT_PLOTLY_MARGIN,
+        **overrides,
+    }
 
 
 def apply_theme(tokens):
@@ -1427,8 +1437,7 @@ def simulate_policy(cdata, leverage, policy_id, params):
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
 def _polar_layout(title, h=460):
-    return dict(
-        **PLOTLY_LAYOUT,
+    return plotly_layout(
         title=dict(text=title, font=dict(size=15, color=C["text"])),
         margin=dict(l=120, r=110, t=80, b=80),
         polar=dict(
@@ -1489,14 +1498,14 @@ def fig_buyers(cdata, name):
         marker=dict(color=colors), text=[f"{v:.0f} %" for v in df["Share"]],
         textposition=["outside" if v > 12 else "inside" for v in df["Share"]],
         hovertemplate="%{y}: %{x:.1f} %<extra></extra>"))
-    fig.update_layout(**PLOTLY_LAYOUT,
+    fig.update_layout(**plotly_layout(
         title=dict(text=f"Buyer Concentration: {name} (HHI {cdata.get('hhi',0):.2f})",
                    font=dict(size=13)),
         xaxis=dict(title="Import Share (%)",
                    range=[0, max(df["Share"])*1.3],
                    gridcolor=C["grid"]),
         yaxis=dict(title="", automargin=True), margin=dict(l=180, r=70, t=70, b=45),
-        height=max(360, len(df)*36), showlegend=False)
+        height=max(360, len(df)*36), showlegend=False))
     return fig
 
 
@@ -1514,7 +1523,7 @@ def fig_processing(commodities):
             marker=dict(color=clr),
             text=[f"{v:.0f} %" for v in df[col]], textposition="outside",
             hovertemplate=f"{col}<br>%{{x}}: %{{y:.1f}} %<extra></extra>"))
-    fig.update_layout(**PLOTLY_LAYOUT,
+    fig.update_layout(**plotly_layout(
         title=dict(text="Processing Capacity Gap: Africa vs China vs EU",
                    font=dict(size=13)),
         barmode="group",
@@ -1522,7 +1531,7 @@ def fig_processing(commodities):
         yaxis=dict(title="Share of Global Processing (%)",
                    gridcolor=C["grid"]),
         legend=dict(orientation="h", y=1.05, xanchor="right", x=1),
-        margin=dict(l=75, r=60, t=80, b=120), height=480)
+        margin=dict(l=75, r=60, t=80, b=120), height=480))
     return fig
 
 
@@ -1537,10 +1546,10 @@ def fig_heatmap(results):
         texttemplate="%{text}", hovertemplate=
         "Commodity: %{y}<br>Dimension: %{x}<br>Score: %{z:.1f}<extra></extra>",
         colorbar=dict(title="Score", ticksuffix="/100")))
-    fig.update_layout(**PLOTLY_LAYOUT,
+    fig.update_layout(**plotly_layout(
         title=dict(text="Leverage Heatmap", font=dict(size=13)),
         xaxis=dict(title="", tickangle=-35, automargin=True), yaxis=dict(title="", automargin=True),
-        height=max(400, len(comms) * 38))
+        height=max(400, len(comms) * 38)))
     return fig
 
 
@@ -1583,9 +1592,9 @@ def fig_sankey(cdata, name):
         node=dict(pad=15, thickness=20, label=nodes, color=ncol,
                   line=dict(color="rgba(0,0,0,.08)", width=.5)),
         link=dict(source=src, target=tgt, value=vals, color=link_clr)))
-    fig.update_layout(**PLOTLY_LAYOUT,
+    fig.update_layout(**plotly_layout(
         title=dict(text=f"Trade Flow: {name} (Africa → Global)",
-                   font=dict(size=13)), height=420)
+                   font=dict(size=13)), height=420))
     return fig
 
 
@@ -1597,14 +1606,14 @@ def fig_gap(gap_data):
     fig.add_trace(go.Bar(x=df["gap"], y=df["dim"], orientation="h",
         name="Gap to 100", marker=dict(color="rgba(168,75,47,.25)"),
         text=[f"Δ{w:.0f}" for w in df["w_impact"]], textposition="outside"))
-    fig.update_layout(**PLOTLY_LAYOUT,
+    fig.update_layout(**plotly_layout(
         title=dict(text="Leverage Gap Analysis (by weighted impact)",
                    font=dict(size=13)),
         barmode="stack",
         xaxis=dict(title="Score 0-100", range=[0, 115], gridcolor=C["grid"]),
         yaxis=dict(title="", automargin=True),
         legend=dict(orientation="h", y=1.05, xanchor="right", x=1),
-        margin=dict(l=210, r=60, t=75, b=60), height=420)
+        margin=dict(l=210, r=60, t=75, b=60), height=420))
     return fig
 
 
@@ -1637,12 +1646,12 @@ def fig_risk_bars(second):
         marker=dict(color=colors),
         text=[str(s) for s in scores], textposition=["outside" if s > 12 else "inside" for s in scores],
         hovertemplate="%{y}: %{x}/100<extra></extra>"))
-    fig.update_layout(**PLOTLY_LAYOUT,
+    fig.update_layout(**plotly_layout(
         title=dict(text="Second-Order Risk Assessment", font=dict(size=13)),
         xaxis=dict(title="Risk Score 0-100", range=[0, 110],
                    gridcolor=C["grid"]),
         yaxis=dict(title="", automargin=True), margin=dict(l=220, r=60, t=75, b=60),
-        height=420, showlegend=False)
+        height=420, showlegend=False))
     return fig
 
 
@@ -1664,10 +1673,10 @@ def fig_scenario_compare(scenarios):
                            else RISK_CLR["Low"] for r in risk]),
         text=[f"{r:.0f}" for r in risk], textposition="outside"),
         row=1, col=2)
-    fig.update_layout(**PLOTLY_LAYOUT,
+    fig.update_layout(**plotly_layout(
         title=dict(text="Scenario Comparison", font=dict(size=13)),
         barmode="group", height=460, margin=dict(l=70, r=40, t=90, b=110),
-        legend=dict(orientation="h", y=-0.12, xanchor="center", x=.25))
+        legend=dict(orientation="h", y=-0.12, xanchor="center", x=.25)))
     fig.update_yaxes(title_text="Composite Score",
                      gridcolor=C["grid"], row=1, col=1)
     fig.update_yaxes(title_text="Risk 0-100",
@@ -1693,13 +1702,13 @@ def fig_country_profile(country_name):
         text=[f"{v:.1f} %" for v in present.values()],
         textposition="outside",
         hovertemplate="%{x}: %{y:.1f} % of global production<extra></extra>"))
-    fig.update_layout(**PLOTLY_LAYOUT,
+    fig.update_layout(**plotly_layout(
         title=dict(text=f"{country_name} — Share of Global Production by Commodity",
                    font=dict(size=13)),
         xaxis=dict(title="", tickangle=-30, automargin=True),
         yaxis=dict(title="Global Production Share (%)",
                    gridcolor=C["grid"]),
-        margin=dict(l=70, r=40, t=75, b=95), height=400)
+        margin=dict(l=70, r=40, t=75, b=95), height=400))
     return fig
 
 
